@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventify | Modern Inventory</title>
+    <!-- Premium Fonts: Plus Jakarta Sans for headings, Inter for body -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Secure page
+        if (localStorage.getItem('isAdminLoggedIn') !== 'true') {
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    <div class="app-background">
+        <!-- Animated background blobs -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+    
+    <div class="app-container">
+        <!-- Floating Sidebar -->
+        <aside class="sidebar premium-glass premium-border">
+            <div class="sidebar-header pt-4">
+                <div class="logo-wrapper">
+                    <div class="logo-icon"><i data-lucide="layers"></i></div>
+                    <h2>Inventify</h2>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i data-lucide="layout-dashboard"></i> 
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i data-lucide="package"></i> 
+                    <span>Inventory</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i data-lucide="bar-chart-3"></i> 
+                    <span>Analytics</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header premium-glass premium-border">
+                <div class="header-search">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search inventory...">
+                    <div class="search-shortcut">Ctrl K</div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary action-hover" id="export-csv-btn">
+                        <i data-lucide="download"></i> Export CSV
+                    </button>
+                    <button class="btn btn-primary action-hover" id="add-item-btn">
+                        <i data-lucide="plus"></i> Add Item
+                    </button>
+                    <button class="btn btn-secondary action-hover" id="logout-btn" style="border-color: rgba(239, 68, 68, 0.3); color: #f87171;" onclick="localStorage.removeItem('isAdminLoggedIn'); window.location.href='/';">
+                        <i data-lucide="log-out"></i> Logout
+                    </button>
+                    <div class="profile-avatar premium-border">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" />
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-scroll-area">
+                <section class="dashboard-stats staggered-fade-in" id="stats-container">
+                    <!-- Skeletons initially, replaced by JS -->
+                    <div class="stat-card premium-glass premium-border skeleton"></div>
+                    <div class="stat-card premium-glass premium-border skeleton"></div>
+                    <div class="stat-card premium-glass premium-border skeleton"></div>
+                    <div class="stat-card premium-glass premium-border skeleton"></div>
+                </section>
+
+                <div class="content-grid">
+                    <!-- Left Column -->
+                    <div class="main-column staggered-fade-in" style="animation-delay: 0.1s;">
+                        <section class="chart-section premium-glass premium-border p-6">
+                            <div class="section-header flex-between mb-4">
+                                <h2 class="section-title"><i data-lucide="trending-up"></i> Value Overview</h2>
+                                <div class="badge badge-primary">Last 30 Days</div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="inventoryChart"></canvas>
+                            </div>
+                        </section>
+
+                        <section class="inventory-section premium-glass premium-border p-0 mt-6">
+                            <div class="section-header p-6 pb-4 border-b">
+                                <h2 class="section-title"><i data-lucide="list"></i> Live Inventory</h2>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item ID & Name</th>
+                                            <th>Price</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-list">
+                                        <!-- Items injected here -->
+                                        <tr><td colspan="4"><div class="skeleton-row skeleton"></div></td></tr>
+                                        <tr><td colspan="4"><div class="skeleton-row skeleton"></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Right Column (Activity) -->
+                    <div class="side-column staggered-fade-in" style="animation-delay: 0.2s;">
+                        <section class="activity-section premium-glass premium-border p-6">
+                            <div class="section-header mb-4">
+                                <h2 class="section-title"><i data-lucide="activity"></i> Logs</h2>
+                            </div>
+                            <div class="activity-list" id="activity-log-list">
+                                <div class="activity-empty text-secondary">Loading live activity...</div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal d-none flex-center" id="action-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content premium-glass premium-border modal-entrance">
+            <div class="modal-header flex-between mb-4">
+                <h3 id="modal-title" class="text-xl fw-bold">Action</h3>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body pt-4">
+                <form id="action-form">
+                    <!-- Dynamic from JS -->
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="app.js"></script>
+</body>
+</html>
